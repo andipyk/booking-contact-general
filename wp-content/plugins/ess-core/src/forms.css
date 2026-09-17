@@ -1,0 +1,313 @@
+/*
+ * Shared styles for the booking and contact blocks.
+ *
+ * Colours, spacing and type come from theme.json presets rather than literals,
+ * so a style variation changes the forms along with everything else. Each
+ * custom property carries a fallback for the case where the blocks are used
+ * under a theme that does not define them.
+ */
+
+/*
+ * The `hidden` attribute has to win.
+ *
+ * Every visibility directive in these blocks works by toggling `hidden`, and
+ * the UA stylesheet expresses that as `[hidden] { display: none }` — an
+ * attribute selector with the same specificity as a class. So any rule here
+ * setting `display: grid` or `display: flex` on a class ties it and wins on
+ * source order, and the element stays visible with `hidden` set. That is how
+ * every day's slots ended up on screen at once.
+ */
+[hidden] {
+	display: none !important;
+}
+
+.ess-booking,
+.ess-contact {
+	--ess-surface: var( --wp--preset--color--surface, #ffffff );
+	--ess-ink: var( --wp--preset--color--ink, #14171a );
+	--ess-muted: var( --wp--preset--color--muted, #5b6672 );
+	--ess-line: var( --wp--preset--color--line, #dfe3e8 );
+	--ess-accent: var( --wp--preset--color--accent, #1d4ed8 );
+	--ess-accent-ink: var( --wp--preset--color--base, #ffffff );
+	--ess-radius: 10px;
+
+	background: var( --ess-surface );
+	border: 1px solid var( --ess-line );
+	border-radius: var( --ess-radius );
+	padding: clamp( 1.25rem, 4vw, 2.5rem );
+	color: var( --ess-ink );
+}
+
+.ess-booking__heading,
+.ess-contact__heading {
+	margin: 0 0 0.5rem;
+	font-size: var( --wp--preset--font-size--large, 1.5rem );
+	line-height: 1.2;
+}
+
+.ess-booking__intro,
+.ess-contact__intro {
+	margin: 0 0 1.5rem;
+	color: var( --ess-muted );
+	max-width: 60ch;
+}
+
+.ess-booking__tz {
+	margin: 0 0 1.5rem;
+	font-size: 0.85rem;
+	color: var( --ess-muted );
+}
+
+.ess-booking__step {
+	border: 0;
+	padding: 0;
+	margin: 0 0 1.75rem;
+	min-width: 0; /* fieldset defaults to min-content, which breaks flex children */
+}
+
+.ess-booking__legend {
+	padding: 0;
+	margin-bottom: 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var( --ess-muted );
+}
+
+/* --- Day picker ------------------------------------------------------- */
+
+.ess-booking__days {
+	display: flex;
+	gap: 0.5rem;
+	overflow-x: auto;
+	padding-bottom: 0.5rem;
+	scroll-snap-type: x proximity;
+	-webkit-overflow-scrolling: touch;
+}
+
+.ess-day {
+	flex: 0 0 auto;
+	min-width: 4.5rem;
+	scroll-snap-align: start;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.1rem;
+	padding: 0.6rem 0.5rem;
+	border: 1px solid var( --ess-line );
+	border-radius: var( --ess-radius );
+	background: transparent;
+	color: inherit;
+	cursor: pointer;
+	font: inherit;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ess-day:hover:not( [disabled] ) {
+	border-color: var( --ess-accent );
+}
+
+.ess-day.is-selected {
+	border-color: var( --ess-accent );
+	background: color-mix( in srgb, var( --ess-accent ) 10%, transparent );
+}
+
+.ess-day[disabled] {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.ess-day__weekday {
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.06em;
+	color: var( --ess-muted );
+}
+
+.ess-day__num {
+	font-size: 1.25rem;
+	font-weight: 600;
+	line-height: 1.1;
+}
+
+.ess-day__month {
+	font-size: 0.7rem;
+	color: var( --ess-muted );
+}
+
+.ess-day__open {
+	margin-top: 0.15rem;
+	font-size: 0.65rem;
+	color: var( --ess-muted );
+}
+
+/* --- Slot grid -------------------------------------------------------- */
+
+.ess-booking__slots {
+	display: grid;
+	grid-template-columns: repeat( auto-fill, minmax( 6rem, 1fr ) );
+	gap: 0.5rem;
+}
+
+.ess-slot {
+	min-width: 0;
+	padding: 0.6rem 0.4rem;
+	border: 1px solid var( --ess-line );
+	border-radius: var( --ess-radius );
+	background: transparent;
+	color: inherit;
+	font: inherit;
+	cursor: pointer;
+	transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.ess-slot:hover:not( [disabled] ) {
+	border-color: var( --ess-accent );
+}
+
+.ess-slot.is-selected {
+	border-color: var( --ess-accent );
+	background: var( --ess-accent );
+	color: var( --ess-accent-ink );
+}
+
+.ess-slot[disabled] {
+	opacity: 0.35;
+	cursor: not-allowed;
+	text-decoration: line-through;
+}
+
+/* --- Fields ----------------------------------------------------------- */
+
+.ess-field {
+	margin-bottom: 1rem;
+	min-width: 0;
+}
+
+.ess-field-row {
+	display: grid;
+	grid-template-columns: repeat( auto-fit, minmax( 12rem, 1fr ) );
+	gap: 0 1rem;
+}
+
+.ess-field label {
+	display: block;
+	margin-bottom: 0.35rem;
+	font-size: 0.85rem;
+	font-weight: 600;
+}
+
+.ess-field input,
+.ess-field select,
+.ess-field textarea {
+	width: 100%;
+	max-width: 100%;
+	box-sizing: border-box;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid var( --ess-line );
+	border-radius: var( --ess-radius );
+	background: var( --ess-surface );
+	color: inherit;
+	font: inherit;
+}
+
+.ess-field input:focus-visible,
+.ess-field select:focus-visible,
+.ess-field textarea:focus-visible,
+.ess-day:focus-visible,
+.ess-slot:focus-visible,
+.ess-booking__submit:focus-visible,
+.ess-contact__submit:focus-visible {
+	outline: 2px solid var( --ess-accent );
+	outline-offset: 2px;
+}
+
+.ess-field textarea {
+	resize: vertical;
+}
+
+/* Honeypot: out of sight for people, still in the DOM for bots. */
+.ess-hp {
+	position: absolute;
+	left: -9999px;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+
+/* --- Actions and messages --------------------------------------------- */
+
+.ess-booking__chosen {
+	margin: 0 0 1rem;
+	padding: 0.6rem 0.85rem;
+	border-radius: var( --ess-radius );
+	background: color-mix( in srgb, var( --ess-accent ) 8%, transparent );
+	font-size: 0.9rem;
+}
+
+.ess-booking__submit,
+.ess-contact__submit {
+	width: 100%;
+	padding: 0.85rem 1.25rem;
+	border: 0;
+	border-radius: var( --ess-radius );
+	background: var( --ess-accent );
+	color: var( --ess-accent-ink );
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.ess-booking__submit[disabled],
+.ess-contact__submit[disabled] {
+	opacity: 0.6;
+	cursor: progress;
+}
+
+.ess-booking__error,
+.ess-contact__error {
+	margin: 0 0 0.85rem;
+	padding: 0.6rem 0.85rem;
+	border-radius: var( --ess-radius );
+	background: #fdecec;
+	color: #8a1c1c;
+	font-size: 0.9rem;
+}
+
+.ess-booking__fineprint {
+	margin: 0.75rem 0 0;
+	font-size: 0.8rem;
+	color: var( --ess-muted );
+	text-align: center;
+}
+
+.ess-booking__empty {
+	margin: 0;
+	color: var( --ess-muted );
+}
+
+.ess-booking__done,
+.ess-contact__done {
+	text-align: center;
+	padding: 1rem 0;
+}
+
+.ess-booking__done-slot {
+	font-size: 1.1rem;
+}
+
+.ess-booking__done code,
+.ess-contact__done code {
+	padding: 0.15rem 0.5rem;
+	border-radius: 6px;
+	background: color-mix( in srgb, var( --ess-accent ) 10%, transparent );
+	overflow-wrap: anywhere;
+}
+
+@media ( prefers-reduced-motion: reduce ) {
+	.ess-day,
+	.ess-slot {
+		transition: none;
+	}
+}

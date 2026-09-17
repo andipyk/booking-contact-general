@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1578 426" role="img" aria-label="The booking workflow: webhook, normalise, two emails, a success or failure sentinel, a signed callback to WordPress, then respond." class="wf">
+<defs>
+<marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--rule-strong)"/></marker>
+<marker id="wf-arrow-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--redline)"/></marker>
+</defs>
+<path d="M 208 195.0 C 229.0 195.0, 229.0 195.0, 250 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 428 195.0 C 449.0 195.0, 449.0 85.0, 470 85.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 648 85.0 C 669.0 85.0, 669.0 85.0, 690 85.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 868 85.0 C 889.0 85.0, 889.0 85.0, 910 85.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 868 85.0 C 889.0 85.0, 889.0 315.0, 910 315.0" fill="none" stroke="var(--redline)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#wf-arrow-err)"/>
+<path d="M 1088 85.0 C 1119.0 85.0, 1119.0 195.0, 1150 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 1088 315.0 C 1119.0 315.0, 1119.0 195.0, 1150 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 1328 195.0 C 1349.0 195.0, 1349.0 195.0, 1370 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<rect x="30" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="42" y="187" class="wf-name" fill="var(--ink)">Booking received</text>
+<text x="42" y="204" class="wf-kind" fill="var(--blueprint)">Webhook</text>
+<text x="42" y="218" class="wf-note" fill="var(--muted)">WordPress POSTs the booking</text>
+<rect x="250" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="262" y="187" class="wf-name" fill="var(--ink)">Normalise</text>
+<text x="262" y="204" class="wf-kind" fill="var(--blueprint)">Code</text>
+<text x="262" y="218" class="wf-note" fill="var(--muted)">one field set for everything downstream</text>
+<rect x="470" y="54" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="482" y="77" class="wf-name" fill="var(--ink)">Email the client</text>
+<text x="482" y="94" class="wf-kind" fill="var(--blueprint)">Send email</text>
+<text x="482" y="108" class="wf-note" fill="var(--muted)">confirmation with the slot</text>
+<rect x="690" y="54" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="702" y="77" class="wf-name" fill="var(--ink)">Email the studio</text>
+<text x="702" y="94" class="wf-kind" fill="var(--blueprint)">Send email</text>
+<text x="702" y="108" class="wf-note" fill="var(--muted)">the brief, to the practice</text>
+<rect x="910" y="284" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--redline)" stroke-width="1.5"/>
+<text x="922" y="307" class="wf-name" fill="var(--ink)">Mark delivery failed</text>
+<text x="922" y="324" class="wf-kind" fill="var(--redline)">Code</text>
+<text x="922" y="338" class="wf-note" fill="var(--muted)">sentinel: failed</text>
+<rect x="910" y="54" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="922" y="77" class="wf-name" fill="var(--ink)">Mark delivery sent</text>
+<text x="922" y="94" class="wf-kind" fill="var(--blueprint)">Code</text>
+<text x="922" y="108" class="wf-note" fill="var(--muted)">sentinel: sent</text>
+<rect x="1150" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="1162" y="187" class="wf-name" fill="var(--ink)">Tell WordPress</text>
+<text x="1162" y="204" class="wf-kind" fill="var(--blueprint)">HTTP</text>
+<text x="1162" y="218" class="wf-note" fill="var(--muted)">signed callback → confirmed</text>
+<rect x="1370" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="1382" y="187" class="wf-name" fill="var(--ink)">Respond</text>
+<text x="1382" y="204" class="wf-kind" fill="var(--blueprint)">Respond</text>
+<text x="1382" y="218" class="wf-note" fill="var(--muted)">close the webhook</text>
+<text x="30" y="418" class="wf-note" fill="var(--muted)">Dashed: the recovery branch. A failed send leaves the booking pending for the cron rather than marking it confirmed.</text>
+</svg>

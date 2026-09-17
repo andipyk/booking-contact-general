@@ -1,0 +1,10 @@
+.env
+.DS_Store
+*.log
+
+# Source is committed; the dependency tree is not. Any build/ output is
+# committed too, so the stack comes up without a Node step.
+node_modules/
+
+# Raw evidence captures; only curated screenshots are kept under docs/.
+docs/scratch/

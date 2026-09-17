@@ -1,0 +1,43 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
+<main class="wp-block-group">
+
+	<!-- wp:group {"style":{"spacing":{"margin":{"top":"var:preset|spacing|50"},"blockGap":"var:preset|spacing|20"}},"layout":{"type":"constrained"}} -->
+	<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--50)">
+		<!-- wp:heading {"level":1,"fontSize":"xx-large"} -->
+		<h1 class="wp-block-heading has-xx-large-font-size">Selected projects</h1>
+		<!-- /wp:heading -->
+		<!-- wp:paragraph {"textColor":"muted","fontSize":"large"} -->
+		<p class="has-muted-color has-text-color has-large-font-size">Brownstone additions, commercial fit-outs and the mechanical work behind both. Every project below was drawn and coordinated in house.</p>
+		<!-- /wp:paragraph -->
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:query {"queryId":1,"query":{"perPage":24,"pages":0,"offset":0,"postType":"ess_project","order":"desc","orderBy":"date","inherit":false},"align":"wide","layout":{"type":"default"},"style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}}}} -->
+	<div class="wp-block-query alignwide" style="margin-top:var(--wp--preset--spacing--40)">
+		<!-- wp:post-template {"className":"ess-grid","layout":{"type":"grid","minimumColumnWidth":"22rem"}} -->
+			<!-- wp:group {"className":"ess-card","style":{"spacing":{"blockGap":"var:preset|spacing|20"}},"layout":{"type":"default"}} -->
+			<div class="wp-block-group ess-card">
+				<!-- wp:post-featured-image {"isLink":true,"sizeSlug":"ess-card","style":{"border":{"radius":"12px"}},"className":"ess-card__media"} /-->
+				<!-- wp:post-terms {"term":"ess_sector","fontSize":"x-small"} /-->
+				<!-- wp:post-title {"isLink":true,"level":2,"fontSize":"large"} /-->
+				<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"ess_location"}}}},"textColor":"muted","fontSize":"small"} -->
+				<p class="has-muted-color has-text-color has-small-font-size">—</p>
+				<!-- /wp:paragraph -->
+			</div>
+			<!-- /wp:group -->
+		<!-- /wp:post-template -->
+
+		<!-- wp:query-no-results -->
+			<!-- wp:paragraph --><p>No projects published yet.</p><!-- /wp:paragraph -->
+		<!-- /wp:query-no-results -->
+	</div>
+	<!-- /wp:query -->
+
+	<!-- wp:pattern {"slug":"eastern-standard/booking-cta"} /-->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

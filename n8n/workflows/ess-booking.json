@@ -1,0 +1,250 @@
+[
+	{
+		"id": "ess-booking-workflow",
+		"name": "ESS \u2014 Booking confirmation",
+		"active": true,
+		"settings": {
+			"executionOrder": "v1"
+		},
+		"nodes": [
+			{
+				"parameters": {
+					"httpMethod": "POST",
+					"path": "ess-booking",
+					"responseMode": "responseNode",
+					"options": {}
+				},
+				"id": "a1000000-0000-4000-8000-000000000001",
+				"name": "Booking received",
+				"type": "n8n-nodes-base.webhook",
+				"typeVersion": 2,
+				"position": [
+					-220,
+					0
+				],
+				"webhookId": "ess-booking"
+			},
+			{
+				"parameters": {
+					"mode": "runOnceForEachItem",
+					"jsCode": "// Normalise once, so every node downstream reads the same field names.\n// `deliveryState` is the sentinel the error branch flips: error objects do not\n// survive past a failure boundary, but a plain field does.\nconst b = $json.body ?? $json;\n\nreturn {\n  json: {\n    bookingId: Number(b.booking_id),\n    reference: String(b.reference ?? ''),\n    name: String(b.name ?? '').trim(),\n    email: String(b.email ?? '').trim(),\n    phone: String(b.phone ?? ''),\n    company: String(b.company ?? ''),\n    projectType: String(b.project_type ?? '').replace(/_/g, ' '),\n    message: String(b.message ?? ''),\n    slotLocal: String(b.slot_local ?? ''),\n    slotStartUtc: String(b.slot_start_utc ?? ''),\n    studioEmail: String(b.studio_email ?? ''),\n    callbackUrl: String(b.callback_url ?? ''),\n    adminUrl: String(b.admin_url ?? ''),\n    deliveryState: 'pending',\n  },\n};"
+				},
+				"id": "a1000000-0000-4000-8000-000000000002",
+				"name": "Normalise",
+				"type": "n8n-nodes-base.code",
+				"typeVersion": 2,
+				"position": [
+					0,
+					0
+				]
+			},
+			{
+				"parameters": {
+					"fromEmail": "={{ $json.studioEmail }}",
+					"toEmail": "={{ $json.email }}",
+					"subject": "={{ 'Your consultation is confirmed \u2014 ' + $json.reference }}",
+					"emailFormat": "text",
+					"text": "={{ 'Hello ' + $json.name + ',\\n\\nYour consultation with Eastern Standard Studio is confirmed.\\n\\nWhen: ' + $json.slotLocal + '\\nAbout: ' + $json.projectType + '\\nReference: ' + $json.reference + '\\n\\nForty-five minutes with a principal. Reply to this email with drawings, a lease plan or a site address and we will read them before we meet.\\n\\n168 Wythe Avenue, Brooklyn NY 11249\\n(718) 555-0143\\n' }}",
+					"options": {}
+				},
+				"id": "a1000000-0000-4000-8000-000000000003",
+				"name": "Email the client",
+				"type": "n8n-nodes-base.emailSend",
+				"typeVersion": 2.1,
+				"position": [
+					220,
+					-110
+				],
+				"credentials": {
+					"smtp": {
+						"id": "ess-mailpit-smtp",
+						"name": "Mailpit (local)"
+					}
+				}
+			},
+			{
+				"parameters": {
+					"fromEmail": "={{ $('Normalise').item.json.studioEmail }}",
+					"toEmail": "={{ $('Normalise').item.json.studioEmail }}",
+					"subject": "={{ 'New consultation: ' + $('Normalise').item.json.name + ' \u2014 ' + $('Normalise').item.json.slotLocal }}",
+					"emailFormat": "text",
+					"text": "={{ 'New consultation booked.\\n\\nName: ' + $('Normalise').item.json.name + '\\nEmail: ' + $('Normalise').item.json.email + '\\nPhone: ' + ($('Normalise').item.json.phone || '-') + '\\nCompany: ' + ($('Normalise').item.json.company || '-') + '\\nProject: ' + $('Normalise').item.json.projectType + '\\nWhen: ' + $('Normalise').item.json.slotLocal + '\\nReference: ' + $('Normalise').item.json.reference + '\\n\\nNotes:\\n' + ($('Normalise').item.json.message || '(none)') + '\\n\\nOpen in admin: ' + $('Normalise').item.json.adminUrl + '\\n' }}",
+					"options": {}
+				},
+				"id": "a1000000-0000-4000-8000-000000000004",
+				"name": "Email the studio",
+				"type": "n8n-nodes-base.emailSend",
+				"typeVersion": 2.1,
+				"position": [
+					440,
+					-110
+				],
+				"credentials": {
+					"smtp": {
+						"id": "ess-mailpit-smtp",
+						"name": "Mailpit (local)"
+					}
+				},
+				"onError": "continueErrorOutput"
+			},
+			{
+				"parameters": {
+					"mode": "runOnceForEachItem",
+					"jsCode": "// The recovery branch. Anything that reaches here failed to send, so the\n// booking is left visible as needing a human rather than marked confirmed.\n// A plain sentinel is set here because the error object itself is not\n// readable from nodes further downstream.\nreturn {\n  json: {\n    ...$('Normalise').item.json,\n    deliveryState: 'failed',\n  },\n};"
+				},
+				"id": "a1000000-0000-4000-8000-000000000005",
+				"name": "Mark delivery failed",
+				"type": "n8n-nodes-base.code",
+				"typeVersion": 2,
+				"position": [
+					660,
+					120
+				]
+			},
+			{
+				"parameters": {
+					"mode": "runOnceForEachItem",
+					"jsCode": "return {\n  json: {\n    ...$('Normalise').item.json,\n    deliveryState: 'sent',\n  },\n};"
+				},
+				"id": "a1000000-0000-4000-8000-000000000006",
+				"name": "Mark delivery sent",
+				"type": "n8n-nodes-base.code",
+				"typeVersion": 2,
+				"position": [
+					660,
+					-110
+				]
+			},
+			{
+				"parameters": {
+					"method": "POST",
+					"url": "={{ $json.callbackUrl }}",
+					"sendHeaders": true,
+					"headerParameters": {
+						"parameters": [
+							{
+								"name": "x-ess-signature",
+								"value": "={{ $env.ESS_WEBHOOK_SECRET }}"
+							}
+						]
+					},
+					"sendBody": true,
+					"specifyBody": "json",
+					"jsonBody": "={{ JSON.stringify({ booking_id: $json.bookingId, status: $json.deliveryState === 'sent' ? 'confirmed' : 'pending', note: $json.deliveryState === 'sent' ? 'confirmation email sent' : 'confirmation email failed; needs a human' }) }}",
+					"options": {
+						"timeout": 10000
+					}
+				},
+				"id": "a1000000-0000-4000-8000-000000000007",
+				"name": "Tell WordPress",
+				"type": "n8n-nodes-base.httpRequest",
+				"typeVersion": 4.2,
+				"position": [
+					900,
+					0
+				]
+			},
+			{
+				"parameters": {
+					"respondWith": "json",
+					"responseBody": "={{ JSON.stringify({ ok: true, booking_id: $('Normalise').item.json.bookingId, delivery: $('Normalise').item.json.deliveryState }) }}",
+					"options": {}
+				},
+				"id": "a1000000-0000-4000-8000-000000000008",
+				"name": "Respond",
+				"type": "n8n-nodes-base.respondToWebhook",
+				"typeVersion": 1.1,
+				"position": [
+					1120,
+					0
+				]
+			}
+		],
+		"connections": {
+			"Booking received": {
+				"main": [
+					[
+						{
+							"node": "Normalise",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			},
+			"Normalise": {
+				"main": [
+					[
+						{
+							"node": "Email the client",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			},
+			"Email the client": {
+				"main": [
+					[
+						{
+							"node": "Email the studio",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			},
+			"Email the studio": {
+				"main": [
+					[
+						{
+							"node": "Mark delivery sent",
+							"type": "main",
+							"index": 0
+						}
+					],
+					[
+						{
+							"node": "Mark delivery failed",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			},
+			"Mark delivery sent": {
+				"main": [
+					[
+						{
+							"node": "Tell WordPress",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			},
+			"Mark delivery failed": {
+				"main": [
+					[
+						{
+							"node": "Tell WordPress",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			},
+			"Tell WordPress": {
+				"main": [
+					[
+						{
+							"node": "Respond",
+							"type": "main",
+							"index": 0
+						}
+					]
+				]
+			}
+		}
+	}
+]

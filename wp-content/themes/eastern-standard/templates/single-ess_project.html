@@ -1,0 +1,118 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
+<main class="wp-block-group">
+
+	<!-- wp:group {"style":{"spacing":{"margin":{"top":"var:preset|spacing|50"},"blockGap":"var:preset|spacing|20"}},"layout":{"type":"constrained"}} -->
+	<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--50)">
+		<!-- wp:post-terms {"term":"ess_sector","fontSize":"x-small"} /-->
+		<!-- wp:post-title {"level":1,"fontSize":"xx-large"} /-->
+		<!-- wp:post-excerpt {"excerptLength":40,"textColor":"muted","fontSize":"large"} /-->
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:post-featured-image {"align":"wide","sizeSlug":"ess-hero","style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}},"border":{"radius":"12px"}}} /-->
+
+	<!--
+		The spec sheet below is the Block Bindings showcase. Every value is a
+		core paragraph bound to post meta, so no shortcode, custom block or
+		field-plugin template tag sits between the database and the page.
+
+		Two sources are in use. Text that is already display-ready uses
+		core/post-meta. The year and the square footage use ess/project-spec,
+		the plugin's own source, because those are stored as integers so they
+		stay sortable and need formatting at render time (4800 -> "4,800 sq ft").
+		See includes/class-bindings.php.
+
+		The visible text in each paragraph is fallback copy, shown only when a
+		binding resolves to nothing.
+	-->
+	<!-- wp:group {"align":"wide","className":"ess-spec","style":{"spacing":{"margin":{"top":"var:preset|spacing|40"},"padding":{"top":"var:preset|spacing|30","bottom":"var:preset|spacing|30"}},"border":{"top":{"color":"var:preset|color|line","width":"1px"},"bottom":{"color":"var:preset|color|line","width":"1px"}}},"layout":{"type":"grid","minimumColumnWidth":"11rem"}} -->
+	<div class="wp-block-group alignwide ess-spec" style="border-top-color:var(--wp--preset--color--line);border-top-width:1px;border-bottom-color:var(--wp--preset--color--line);border-bottom-width:1px;margin-top:var(--wp--preset--spacing--40);padding-top:var(--wp--preset--spacing--30);padding-bottom:var(--wp--preset--spacing--30)">
+
+		<!-- wp:group {"style":{"spacing":{"blockGap":"0.25rem"}},"layout":{"type":"default"}} -->
+		<div class="wp-block-group">
+			<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Location</p>
+			<!-- /wp:paragraph -->
+			<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"ess_location"}}}},"style":{"typography":{"fontWeight":"600"}}} -->
+			<p style="font-weight:600">—</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+		<!-- wp:group {"style":{"spacing":{"blockGap":"0.25rem"}},"layout":{"type":"default"}} -->
+		<div class="wp-block-group">
+			<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Completed</p>
+			<!-- /wp:paragraph -->
+			<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"ess/project-spec","args":{"key":"ess_year_completed"}}}},"style":{"typography":{"fontWeight":"600"}}} -->
+			<p style="font-weight:600">—</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+		<!-- wp:group {"style":{"spacing":{"blockGap":"0.25rem"}},"layout":{"type":"default"}} -->
+		<div class="wp-block-group">
+			<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Area</p>
+			<!-- /wp:paragraph -->
+			<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"ess/project-spec","args":{"key":"ess_square_feet"}}}},"style":{"typography":{"fontWeight":"600"}}} -->
+			<p style="font-weight:600">—</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+		<!-- wp:group {"style":{"spacing":{"blockGap":"0.25rem"}},"layout":{"type":"default"}} -->
+		<div class="wp-block-group">
+			<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Client</p>
+			<!-- /wp:paragraph -->
+			<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"ess_client_type"}}}},"style":{"typography":{"fontWeight":"600"}}} -->
+			<p style="font-weight:600">—</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+		<!-- wp:group {"style":{"spacing":{"blockGap":"0.25rem"}},"layout":{"type":"default"}} -->
+		<div class="wp-block-group">
+			<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Scope</p>
+			<!-- /wp:paragraph -->
+			<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"ess_scope"}}}},"style":{"typography":{"fontWeight":"600"}}} -->
+			<p style="font-weight:600">—</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+		<!-- wp:group {"style":{"spacing":{"blockGap":"0.25rem"}},"layout":{"type":"default"}} -->
+		<div class="wp-block-group">
+			<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Programme</p>
+			<!-- /wp:paragraph -->
+			<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"ess_duration"}}}},"style":{"typography":{"fontWeight":"600"}}} -->
+			<p style="font-weight:600">—</p>
+			<!-- /wp:paragraph -->
+		</div>
+		<!-- /wp:group -->
+
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:post-content {"layout":{"type":"constrained"},"style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}}}} /-->
+
+	<!-- wp:group {"style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}}},"layout":{"type":"constrained"}} -->
+	<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--40)">
+		<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Disciplines</p>
+			<!-- /wp:paragraph -->
+		<!-- wp:post-terms {"term":"ess_discipline","fontSize":"small"} /-->
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:pattern {"slug":"eastern-standard/booking-cta"} /-->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

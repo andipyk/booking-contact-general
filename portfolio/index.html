@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Eastern Standard Studio</title>
+<meta name="description" content="Case study: a WordPress 7.1 booking, contact and portfolio site where two simultaneous requests for one slot produce exactly one booking, confirmed by a self-hosted n8n workflow.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0F1E23">
+<link rel="canonical" href="https://andipyk.github.io/booking-contact-general/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Eastern Standard Studio">
+<meta property="og:description" content="Two people click the same slot. One booking exists. A WordPress 7.1 build with a database-enforced booking lock and a self-hosted n8n workflow.">
+<meta property="og:url" content="https://andipyk.github.io/booking-contact-general/">
+<meta property="og:image" content="https://andipyk.github.io/booking-contact-general/assets/full/01-home.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%230F1E23'/%3E%3Ctext x='32' y='44' font-family='Arial,sans-serif' font-size='34' font-weight='900' text-anchor='middle' fill='%23FF7A3D'%3EE%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://api.fontshare.com">
+<link rel="preconnect" href="https://cdn.fontshare.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&amp;display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap">
+<link rel="stylesheet" href="site.css">
+<style>
+  /* Page figures: the n8n workflow, the execution chart, and the race. */
+  .wf { --blueprint: var(--teal); --rule-strong: var(--line-strong); --rule-soft: var(--line); color: var(--ink); }
+  .wf-name { font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; }
+  .wf-kind { font-family: var(--font-mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .wf-note { font-family: var(--font-sans); font-size: 10px; }
+  .chart-scroll svg { min-width: 560px; }
+
+  .race {
+    padding: clamp(24px, 4vw, 48px);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    box-shadow: var(--shadow);
+  }
+  .race__marks {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 8px;
+    margin: 24px 0;
+    padding: 0;
+    list-style: none;
+  }
+  .race__mark {
+    aspect-ratio: 1;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    font-size: clamp(11px, 1.4vw, 15px);
+    color: var(--muted);
+  }
+  .race__mark--won {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--surface);
+    font-weight: 700;
+  }
+  .race__legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--muted);
+  }
+  @media (max-width: 640px) {
+    .race__marks { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/gsap.min.js" integrity="sha512-oJ8QbaQThQoJZ7oEv+29jfPM6CcP+zUxh3PKJs1vyOhx0UraUrE7PQgeItu3dOuCJyrzWpoYMsVjkkPEBzbUqw==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.15.0/ScrollTrigger.min.js" integrity="sha512-OaIE7ud4P04EhnBuhEcm0wQSceIxbi2pV03oBLS/+F6ampfxsnxcIxOp7H2eF9G7N0kEht0VAzOLG+dTLSo17Q==" crossorigin="anonymous" referrerpolicy="no-referrer" defer></script>
+<script src="site.js" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">Skip to content</a>
+
+<header class="nav">
+  <nav class="nav__pill" aria-label="Page">
+    <a class="nav__brand" href="#top">Eastern Standard Studio</a>
+    <span class="nav__links">
+      <a href="#brief">Brief</a>
+      <a href="#build">Build</a>
+      <a href="#evidence">Evidence</a>
+    </span>
+    <a class="nav__cta" href="https://github.com/andipyk/booking-contact-general">Source</a>
+  </nav>
+</header>
+
+<main id="main">
+
+  <section class="hero" id="top">
+    <div class="hero__media">
+      <img src="assets/full/01-home.jpg" alt="" width="1568" height="743">
+    </div>
+    <div class="shell">
+      <p class="hero__name">Eastern Standard Studio &middot; case study</p>
+      <h1>Two people click the same slot. One booking exists.</h1>
+      <p class="hero__lede">A small architecture and MEP practice needed a site that turns a visitor into a confirmed appointment in one visit. The calendar was the easy part. The work went into making sure it can only ever be right.</p>
+      <div class="hero__actions">
+        <a class="btn btn--solid" href="#evidence">See the evidence <span class="arrow" aria-hidden="true">&rarr;</span></a>
+        <a class="btn btn--line" href="https://github.com/andipyk/booking-contact-general">Source on GitHub</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="facts">
+    <div class="shell">
+      <dl>
+        <div><dt class="label">Status</dt><dd class="ok">Verified end to end</dd></div>
+        <div><dt class="label">Built</dt><dd>Sept 2026</dd></div>
+        <div><dt class="label">Runtime</dt><dd>WordPress 7.1 &middot; PHP 8.4 &middot; Docker</dd></div>
+        <div><dt class="label">Engagement</dt><dd>Self-initiated</dd></div>
+      </dl>
+    </div>
+  </div>
+
+  <section class="section" id="brief">
+    <div class="shell split">
+      <div class="head">
+        <h2>Enquiries stalled between the contact form and the diary.</h2>
+      </div>
+      <div class="prose">
+        <p>Someone reads about a project and wants twenty minutes to find out whether their own job is feasible. They meet a contact form that disappears into an inbox. Two days later a partner replies offering three times, and one is already gone. The thread runs four messages before anything reaches a diary, and some prospects give up in the middle.</p>
+        <p>The practice also cannot show its work properly. Every project has facts a prospective client wants first: where, how big, how long, which disciplines. Those facts were retyped into prose, so they disagreed between pages and could not be filtered.</p>
+        <p>What finished looks like, stated so it can be checked:</p>
+        <ul class="goals">
+          <li><span>A visitor picks a slot and receives a confirmation in one visit, with no email exchange.</span></li>
+          <li><span>Two people clicking the same slot at the same moment produce exactly one booking.</span></li>
+          <li><span>Each project's facts are entered once and render identically everywhere they appear.</span></li>
+          <li><span>The site is fast and structured enough that the work can be found.</span></li>
+        </ul>
+        <p class="disclosure">Eastern Standard Studio is invented. The practice, its projects and its address are fictional, and this build was self-initiated.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="head">
+        <h2>One slot holds one booking, and the database enforces it.</h2>
+      </div>
+      <div class="bento">
+        <article class="card card--wide card--night">
+          <p class="label">Correctness</p>
+          <h3>Make double booking a database problem</h3>
+          <p>The obvious build reads "is this slot free?" and then writes. Two simultaneous requests both pass the read. That window is milliseconds wide, and a double-booked principal is the exact failure a booking system exists to prevent, so the guarantee sits in a <code>UNIQUE KEY</code>.</p>
+          <div class="tags"><span>wp_ess_slot_locks</span><span>UNIQUE KEY slot_start</span><span>409 on conflict</span></div>
+        </article>
+        <article class="card">
+          <p class="label">Scope</p>
+          <h3>Build the booking engine in code</h3>
+          <p>A booking plugin carries settings for every case this practice does not have: one appointment type, one calendar, a fixed weekly pattern. The only hard question in it is the one a plugin would hide.</p>
+        </article>
+        <article class="card">
+          <p class="label">Structure</p>
+          <h3>Keep the data out of the theme</h3>
+          <p>Everything functional sits in a plugin and the theme only renders. A redesign in three years should not take the appointments with it.</p>
+        </article>
+        <article class="card card--wide">
+          <p class="label">Automation</p>
+          <h3>Host the automation on the same network</h3>
+          <p>A cloud automation platform cannot reach a local site without a tunnel whose URL changes on every restart. n8n on the same Docker network has a hostname that never moves, and the workflow ships as a JSON file in the repository that <code>setup.sh</code> imports.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <div class="marquee" aria-label="Stack">
+    <div class="marquee__track">
+      <ul class="marquee__group">
+        <li>WordPress<span>7.1</span></li><li>PHP<span>8.4</span></li><li>MariaDB<span>11.8</span></li><li>Block theme</li><li>Block Bindings API</li><li>Interactivity API</li><li>REST API</li><li>n8n<span>2.40</span></li><li>Redis<span>8</span></li><li>Mailpit<span>1.31</span></li><li>Docker Compose</li>
+      </ul>
+      <ul class="marquee__group" aria-hidden="true">
+        <li>WordPress<span>7.1</span></li><li>PHP<span>8.4</span></li><li>MariaDB<span>11.8</span></li><li>Block theme</li><li>Block Bindings API</li><li>Interactivity API</li><li>REST API</li><li>n8n<span>2.40</span></li><li>Redis<span>8</span></li><li>Mailpit<span>1.31</span></li><li>Docker Compose</li>
+      </ul>
+    </div>
+  </div>
+
+  <section class="section" id="build">
+    <div class="shell">
+      <div class="head">
+        <h2>What one booking does.</h2>
+        <p>The steps run on every booking request. The table beside them lists one decision per layer and what it buys.</p>
+      </div>
+
+      <div class="split">
+        <ol class="flow">
+          <li><div><strong>Guard the request</strong><span>Nonce, honeypot, a signed render stamp and a per-address rate limit, all checked before anything is written.</span></div></li>
+          <li><div><strong>Resolve the slot on the server</strong><span>A submitted timestamp is never trusted. It is matched against the slots the studio publishes, or a crafted request could book 3&nbsp;am on a Sunday.</span></div></li>
+          <li><div><strong>Create the record, then claim the lock</strong><span>If the claim loses the race, the record is deleted again, so a rejected booking leaves nothing behind.</span></div></li>
+          <li><div><strong>Hand off to the automation</strong><span>The payload carries its own callback URL, so the workflow never hardcodes where the site lives.</span></div></li>
+          <li><div><strong>Confirm back</strong><span>n8n sends both emails and calls a signed REST route that marks the booking confirmed and timestamps it.</span></div></li>
+          <li><div><strong>Recover when it does not</strong><span>A booking with no callback stays pending, and an hourly job releases the hold after 30 minutes. A broken workflow costs one slot for half an hour.</span></div></li>
+        </ol>
+
+        <div class="table-wrap">
+          <table>
+            <caption>One decision per layer.</caption>
+            <thead><tr><th scope="col">Layer</th><th scope="col">Choice</th><th scope="col">What it buys</th></tr></thead>
+            <tbody>
+              <tr><td>Theme</td><td>Block theme, <code>theme.json</code> v3</td><td>No page-builder payload; 100 performance</td></tr>
+              <tr><td>Display</td><td>Block Bindings API</td><td>Project fields bound to core blocks, no shortcodes</td></tr>
+              <tr><td>Booking UI</td><td>Interactivity API, server-rendered</td><td>Slots in the HTML before JS; CLS 0</td></tr>
+              <tr><td>Correctness</td><td><code>UNIQUE KEY</code> on a lock table</td><td>A second booking for a slot cannot be written</td></tr>
+              <tr><td>Automation</td><td>n8n on the Docker network</td><td>Confirmation and callback with no tunnel</td></tr>
+              <tr><td>Mail</td><td>Mailpit</td><td>Every message inspectable; nothing leaves the stack</td></tr>
+              <tr><td>Cache</td><td>Redis, phpredis in the shared image</td><td>CLI and web behave identically</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="plates" style="margin-top: clamp(56px, 7vw, 96px)">
+        <figure class="plate">
+          <div class="plate__frame" data-scale>
+            <button type="button" class="zoom" data-full="assets/full/01-home.jpg" aria-label="Enlarge the home page screenshot"><img src="assets/01-home.jpg" alt="The studio home page: a large serif headline reading 'Drawings that agree with each other', with a book-a-consultation button." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+          </div>
+          <figcaption><strong>Home</strong><span class="mono">LCP 0.5 s</span></figcaption>
+        </figure>
+        <figure class="plate">
+          <div class="plate__frame" data-scale>
+            <button type="button" class="zoom" data-full="assets/full/02-projects.jpg" aria-label="Enlarge the projects archive screenshot"><img src="assets/02-projects.jpg" alt="The projects archive: a grid of project cards, each with a generated plan drawing, a sector label, a title and a location." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+          </div>
+          <figcaption><strong>Projects</strong><span class="mono">sector and location from meta</span></figcaption>
+        </figure>
+        <figure class="plate">
+          <div class="plate__frame" data-scale>
+            <button type="button" class="zoom" data-full="assets/full/03-project-spec.jpg" aria-label="Enlarge the project spec sheet screenshot"><img src="assets/03-project-spec.jpg" alt="A project page spec sheet: location Brooklyn Navy Yard, completed 2025, area 5,400 sq ft, client research tenant, scope MEP engineering, programme 9 months." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+          </div>
+          <figcaption><strong>Spec sheet</strong><span class="mono">every value is a bound field</span></figcaption>
+        </figure>
+        <figure class="plate">
+          <div class="plate__frame" data-scale>
+            <button type="button" class="zoom" data-full="assets/full/04-contact.jpg" aria-label="Enlarge the contact page screenshot"><img src="assets/04-contact.jpg" alt="The contact page: studio address and direct lines beside a message form." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+          </div>
+          <figcaption><strong>Contact</strong><span class="mono">same nonce and anti-spam layer</span></figcaption>
+        </figure>
+      </div>
+
+      <figure class="plate" style="margin-top: clamp(56px, 7vw, 96px)">
+        <div class="plate__frame" data-scale>
+          <button type="button" class="zoom" data-svg="1" aria-label="Enlarge the workflow diagram"><span class="svg-scroll"><svg viewBox="0 0 1578 426" role="img" aria-label="The booking workflow: webhook, normalise, two emails, a success or failure sentinel, a signed callback to WordPress, then respond." class="wf">
+<defs>
+<marker id="wf-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--rule-strong)"/></marker>
+<marker id="wf-arrow-err" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="var(--redline)"/></marker>
+</defs>
+<path d="M 208 195.0 C 229.0 195.0, 229.0 195.0, 250 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 428 195.0 C 449.0 195.0, 449.0 85.0, 470 85.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 648 85.0 C 669.0 85.0, 669.0 85.0, 690 85.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 868 85.0 C 889.0 85.0, 889.0 85.0, 910 85.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 868 85.0 C 889.0 85.0, 889.0 315.0, 910 315.0" fill="none" stroke="var(--redline)" stroke-width="1.5" stroke-dasharray="5 4" marker-end="url(#wf-arrow-err)"/>
+<path d="M 1088 85.0 C 1119.0 85.0, 1119.0 195.0, 1150 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 1088 315.0 C 1119.0 315.0, 1119.0 195.0, 1150 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<path d="M 1328 195.0 C 1349.0 195.0, 1349.0 195.0, 1370 195.0" fill="none" stroke="var(--rule-strong)" stroke-width="1.5" marker-end="url(#wf-arrow)"/>
+<rect x="30" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="42" y="187" class="wf-name" fill="var(--ink)">Booking received</text>
+<text x="42" y="204" class="wf-kind" fill="var(--blueprint)">Webhook</text>
+<text x="42" y="218" class="wf-note" fill="var(--muted)">WordPress POSTs the booking</text>
+<rect x="250" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="262" y="187" class="wf-name" fill="var(--ink)">Normalise</text>
+<text x="262" y="204" class="wf-kind" fill="var(--blueprint)">Code</text>
+<text x="262" y="218" class="wf-note" fill="var(--muted)">one field set for everything downstream</text>
+<rect x="470" y="54" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="482" y="77" class="wf-name" fill="var(--ink)">Email the client</text>
+<text x="482" y="94" class="wf-kind" fill="var(--blueprint)">Send email</text>
+<text x="482" y="108" class="wf-note" fill="var(--muted)">confirmation with the slot</text>
+<rect x="690" y="54" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="702" y="77" class="wf-name" fill="var(--ink)">Email the studio</text>
+<text x="702" y="94" class="wf-kind" fill="var(--blueprint)">Send email</text>
+<text x="702" y="108" class="wf-note" fill="var(--muted)">the brief, to the practice</text>
+<rect x="910" y="284" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--redline)" stroke-width="1.5"/>
+<text x="922" y="307" class="wf-name" fill="var(--ink)">Mark delivery failed</text>
+<text x="922" y="324" class="wf-kind" fill="var(--redline)">Code</text>
+<text x="922" y="338" class="wf-note" fill="var(--muted)">sentinel: failed</text>
+<rect x="910" y="54" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="922" y="77" class="wf-name" fill="var(--ink)">Mark delivery sent</text>
+<text x="922" y="94" class="wf-kind" fill="var(--blueprint)">Code</text>
+<text x="922" y="108" class="wf-note" fill="var(--muted)">sentinel: sent</text>
+<rect x="1150" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="1162" y="187" class="wf-name" fill="var(--ink)">Tell WordPress</text>
+<text x="1162" y="204" class="wf-kind" fill="var(--blueprint)">HTTP</text>
+<text x="1162" y="218" class="wf-note" fill="var(--muted)">signed callback → confirmed</text>
+<rect x="1370" y="164" width="178" height="62" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="1.5"/>
+<text x="1382" y="187" class="wf-name" fill="var(--ink)">Respond</text>
+<text x="1382" y="204" class="wf-kind" fill="var(--blueprint)">Respond</text>
+<text x="1382" y="218" class="wf-note" fill="var(--muted)">close the webhook</text>
+<text x="30" y="418" class="wf-note" fill="var(--muted)">Dashed: the recovery branch. A failed send leaves the booking pending for the cron rather than marking it confirmed.</text>
+</svg></span><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+        </div>
+        <figcaption><strong>The workflow that confirms a booking</strong><span class="mono">drawn from n8n/workflows/ess-booking.json</span></figcaption>
+      </figure>
+
+      <div class="code-pair" style="margin-top: clamp(56px, 7vw, 96px)">
+          <div>
+            <p class="code-caption">ess-core/includes/class-slot-lock.php</p>
+            <pre class="codeblock"><span class="cm">// No SELECT first, on purpose: the INSERT is the test, and it is atomic.</span>
+<span class="cm">// Correctness comes from UNIQUE KEY slot_start, not from PHP timing.</span>
+$inserted = $wpdb-&gt;<span class="fn">insert</span>( self::<span class="fn">table</span>(), [ <span class="cm">/* … */</span> ] );
+
+<span class="fn">if</span> ( false === $inserted ) {
+    <span class="fn">return</span> false;   <span class="cm">// duplicate key &rarr; the REST layer returns 409</span>
+}</pre>
+          </div>
+          <div>
+            <p class="code-caption">ess-core/includes/class-availability.php</p>
+            <pre class="codeblock"><span class="cm">// PHP silently rolls a non-existent local time forward on a spring-forward</span>
+<span class="cm">// day. Comparing the result back catches a slot no clock ever shows.</span>
+$built = <span class="fn">DateTimeImmutable::createFromFormat</span>( <span class="st">'Y-m-d H:i'</span>, "$date $time", $tz );
+
+<span class="fn">if</span> ( ! $built || $built-&gt;format( <span class="st">'Y-m-d H:i'</span> ) !== "$date $time" ) {
+    <span class="fn">return</span> null;
+}</pre>
+          </div>
+      </div>
+
+      <figure class="plate" style="margin-top: clamp(40px, 5vw, 64px); max-width: 920px; margin-inline: auto">
+          <div class="plate__frame" data-scale>
+          <button type="button" class="zoom" data-svg="1" aria-label="Enlarge the execution history chart"><span class="svg-scroll chart-scroll"><svg viewBox="0 0 720 272" class="wf" role="img" aria-label="Ten webhook executions in order. Runs 1 to 4 failed while the callback was being debugged; runs 5 to 10 succeeded, taking between 266 and 1144 milliseconds.">
+<line x1="58" y1="125.0" x2="698" y2="125.0" stroke="var(--rule-soft)" stroke-width="1"/>
+<text x="50" y="128.5" text-anchor="end" class="wf-note" fill="var(--faint)">572</text>
+<line x1="58" y1="30.0" x2="698" y2="30.0" stroke="var(--rule-soft)" stroke-width="1"/>
+<text x="50" y="33.5" text-anchor="end" class="wf-note" fill="var(--faint)">1144</text>
+<text x="50" y="223.5" text-anchor="end" class="wf-note" fill="var(--faint)">0</text>
+<text x="50" y="16" text-anchor="end" class="wf-kind" fill="var(--faint)">ms</text>
+<rect x="58" y="83.8" width="46" height="136.2" fill="var(--redline)" fill-opacity="0.28" stroke="var(--redline)" stroke-width="1.5"/>
+<text x="81.0" y="76.8" text-anchor="middle" class="wf-note" fill="var(--muted)">820</text>
+<text x="81.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--redline)">1</text>
+<text x="81.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">fail</text>
+<rect x="124" y="47.3" width="46" height="172.7" fill="var(--redline)" fill-opacity="0.28" stroke="var(--redline)" stroke-width="1.5"/>
+<text x="147.0" y="40.3" text-anchor="middle" class="wf-note" fill="var(--muted)">1040</text>
+<text x="147.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--redline)">2</text>
+<text x="147.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">fail</text>
+<rect x="190" y="184.8" width="46" height="35.2" fill="var(--redline)" fill-opacity="0.28" stroke="var(--redline)" stroke-width="1.5"/>
+<text x="213.0" y="177.8" text-anchor="middle" class="wf-note" fill="var(--muted)">212</text>
+<text x="213.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--redline)">3</text>
+<text x="213.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">fail</text>
+<rect x="256" y="153.9" width="46" height="66.1" fill="var(--redline)" fill-opacity="0.28" stroke="var(--redline)" stroke-width="1.5"/>
+<text x="279.0" y="146.9" text-anchor="middle" class="wf-note" fill="var(--muted)">398</text>
+<text x="279.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--redline)">4</text>
+<text x="279.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">fail</text>
+<rect x="322" y="146.1" width="46" height="73.9" fill="var(--blueprint)"/>
+<text x="345.0" y="139.1" text-anchor="middle" class="wf-note" fill="var(--muted)">445</text>
+<text x="345.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--blueprint)">5</text>
+<text x="345.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">ok</text>
+<rect x="388" y="175.8" width="46" height="44.2" fill="var(--blueprint)"/>
+<text x="411.0" y="168.8" text-anchor="middle" class="wf-note" fill="var(--muted)">266</text>
+<text x="411.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--blueprint)">6</text>
+<text x="411.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">ok</text>
+<rect x="454" y="166.9" width="46" height="53.1" fill="var(--blueprint)"/>
+<text x="477.0" y="159.9" text-anchor="middle" class="wf-note" fill="var(--muted)">320</text>
+<text x="477.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--blueprint)">7</text>
+<text x="477.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">ok</text>
+<rect x="520" y="43.6" width="46" height="176.4" fill="var(--blueprint)"/>
+<text x="543.0" y="36.6" text-anchor="middle" class="wf-note" fill="var(--muted)">1062</text>
+<text x="543.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--blueprint)">8</text>
+<text x="543.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">ok</text>
+<rect x="586" y="132.6" width="46" height="87.4" fill="var(--blueprint)"/>
+<text x="609.0" y="125.6" text-anchor="middle" class="wf-note" fill="var(--muted)">526</text>
+<text x="609.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--blueprint)">9</text>
+<text x="609.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">ok</text>
+<rect x="652" y="30.0" width="46" height="190.0" fill="var(--blueprint)"/>
+<text x="675.0" y="23.0" text-anchor="middle" class="wf-note" fill="var(--muted)">1144</text>
+<text x="675.0" y="237" text-anchor="middle" class="wf-kind" fill="var(--blueprint)">10</text>
+<text x="675.0" y="251" text-anchor="middle" class="wf-note" fill="var(--faint)">ok</text>
+<line x1="312.0" y1="24" x2="312.0" y2="256" stroke="var(--rule-strong)" stroke-width="1" stroke-dasharray="3 3"/>
+<text x="319.0" y="16" class="wf-kind" fill="var(--rule-strong)">callback fixed</text>
+<text x="58" y="264" class="wf-note" fill="var(--muted)">Runs 1-4 are the debugging record: the emails sent every time, and the confirmation callback failed every time.</text>
+</svg></span><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+        </div>
+        <figcaption><strong>Every run the automation has had</strong><span class="mono">drawn from n8n's database</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="section" id="evidence">
+    <div class="shell">
+      <div class="head">
+        <h2>Twelve requests for one slot. One booking.</h2>
+        <p>Every figure on this page came from a script in the repository, so each one can be re-run.</p>
+      </div>
+
+      <figure class="plate race" data-scale>
+        <p class="label">Twelve simultaneous bookings, one slot: <code>bin/concurrency-test.sh 12</code></p>
+        <ol class="race__marks" aria-label="Response codes">
+          <li class="race__mark race__mark--won">201</li>
+          <li class="race__mark">409</li><li class="race__mark">409</li><li class="race__mark">409</li>
+          <li class="race__mark">409</li><li class="race__mark">409</li><li class="race__mark">409</li>
+          <li class="race__mark">409</li><li class="race__mark">409</li><li class="race__mark">409</li>
+          <li class="race__mark">409</li><li class="race__mark">409</li>
+        </ol>
+        <ul class="race__legend">
+          <li>1 created</li><li>11 rejected</li><li>1 lock row</li><li>1 booking post</li><li>0 orphans</li>
+        </ul>
+      </figure>
+
+      <div class="carousel" data-scale aria-roledescription="carousel" aria-label="Evidence" style="margin-top: clamp(64px, 8vw, 112px)">
+        <div class="carousel__track" tabindex="0">
+          <figure class="plate slide" aria-roledescription="slide" aria-label="1 of 6">
+            <figcaption>
+              <p class="slide__claim">Pick a day, pick a time, fill in the form, and the confirmation arrives with a reference. No email exchange.</p>
+              <p class="slide__source label">Screen recording</p>
+            </figcaption>
+            <div class="plate__frame">
+              <button type="button" class="zoom" data-full="assets/full/booking-flow.gif" aria-label="Enlarge the booking recording"><img src="assets/booking-flow.gif" alt="Choosing a day, choosing a time, filling in the form, and the confirmation panel with a booking reference." width="820" height="389" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+            </div>
+          </figure>
+          <figure class="plate slide" aria-roledescription="slide" aria-label="2 of 6">
+            <figcaption>
+              <p class="slide__claim">The workflow that confirms it: eight nodes, with a recovery branch for a failed send.</p>
+              <p class="slide__source label">n8n &middot; workflow canvas</p>
+            </figcaption>
+            <div class="plate__frame">
+              <button type="button" class="zoom" data-full="assets/full/14-n8n-canvas.jpg" aria-label="Enlarge the n8n canvas"><img src="assets/14-n8n-canvas.jpg" alt="The workflow open in n8n: eight nodes from the webhook through two email sends, a success and a failure branch, the callback to WordPress, and the response." width="1000" height="533" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+            </div>
+          </figure>
+          <figure class="plate slide" aria-roledescription="slide" aria-label="3 of 6">
+            <figcaption>
+              <p class="slide__claim">A run that worked: every node green in 505 ms.</p>
+              <p class="slide__source label">n8n &middot; execution</p>
+            </figcaption>
+            <div class="plate__frame">
+              <button type="button" class="zoom" data-full="assets/full/15-n8n-run-success.jpg" aria-label="Enlarge the successful run"><img src="assets/15-n8n-run-success.jpg" alt="A successful run in n8n: every node carries a green tick and one item flows between them. Succeeded in 505 ms." width="1000" height="489" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+            </div>
+          </figure>
+          <figure class="plate slide" aria-roledescription="slide" aria-label="4 of 6">
+            <figcaption>
+              <p class="slide__claim">The callback bug while it was live: both emails green, the callback red.</p>
+              <p class="slide__source label">n8n &middot; failed execution</p>
+            </figcaption>
+            <div class="plate__frame">
+              <button type="button" class="zoom" data-full="assets/full/16-n8n-run-failed.jpg" aria-label="Enlarge the failed run"><img src="assets/16-n8n-run-failed.jpg" alt="A failed run in n8n: the two email nodes carry green ticks while the callback node is red, with the message 'The service refused the connection'." width="1000" height="489" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+            </div>
+          </figure>
+          <figure class="plate slide" aria-roledescription="slide" aria-label="5 of 6">
+            <figcaption>
+              <p class="slide__claim">n8n's own tally: ten runs, four failed while the callback was being fixed.</p>
+              <p class="slide__source label">n8n &middot; overview</p>
+            </figcaption>
+            <div class="plate__frame">
+              <button type="button" class="zoom" data-full="assets/full/13-n8n-overview.jpg" aria-label="Enlarge the n8n overview"><img src="assets/13-n8n-overview.jpg" alt="The n8n overview: one published workflow, ten production executions, four failed, a 40 percent failure rate and 0.61 s average run time." width="1000" height="489" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+            </div>
+          </figure>
+          <figure class="plate slide" aria-roledescription="slide" aria-label="6 of 6">
+            <figcaption>
+              <p class="slide__claim">Each booking produced two emails: a confirmation to the client and a brief to the studio.</p>
+              <p class="slide__source label">Mailpit &middot; inbox</p>
+            </figcaption>
+            <div class="plate__frame">
+              <button type="button" class="zoom" data-full="assets/full/10-mailpit.jpg" aria-label="Enlarge the Mailpit inbox"><img src="assets/10-mailpit.jpg" alt="The captured mail inbox: each booking produced a pair of messages, a confirmation to the client and a brief to the studio." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+            </div>
+          </figure>
+        </div>
+        <div class="carousel__bar">
+          <div class="thumbs">
+            <button type="button" aria-label="Show slide 1: booking recording"><img src="assets/09-booking-confirmed.jpg" alt="" width="1000" height="474" loading="lazy"></button>
+            <button type="button" aria-label="Show slide 2: workflow canvas"><img src="assets/14-n8n-canvas.jpg" alt="" width="1000" height="533" loading="lazy"></button>
+            <button type="button" aria-label="Show slide 3: successful run"><img src="assets/15-n8n-run-success.jpg" alt="" width="1000" height="489" loading="lazy"></button>
+            <button type="button" aria-label="Show slide 4: failed run"><img src="assets/16-n8n-run-failed.jpg" alt="" width="1000" height="489" loading="lazy"></button>
+            <button type="button" aria-label="Show slide 5: n8n overview"><img src="assets/13-n8n-overview.jpg" alt="" width="1000" height="489" loading="lazy"></button>
+            <button type="button" aria-label="Show slide 6: Mailpit inbox"><img src="assets/10-mailpit.jpg" alt="" width="1000" height="474" loading="lazy"></button>
+          </div>
+          <div class="carousel__ctrl">
+            <button type="button" class="round" data-dir="-1" aria-label="Previous slide">&larr;</button>
+            <span class="carousel__count" aria-live="polite"></span>
+            <button type="button" class="round" data-dir="1" aria-label="Next slide">&rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="split" style="margin-top: clamp(64px, 8vw, 112px)">
+        <div class="prose">
+          <p class="label">Lighthouse, desktop preset</p>
+          <p style="margin-top: 14px">The first audit scored 92 for SEO on two pages and 95 to 98 for accessibility on four. The causes: labels marked up as headings, so the outline jumped from h2 to h6; a text colour at about 1.1:1 against its background; and two pages with no meta description. Each was fixed at the cause, and the table is the second audit.</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>Reports committed to the repository under docs/lighthouse/.</caption>
+            <thead>
+              <tr><th scope="col">Page</th><th scope="col">Perf</th><th scope="col">A11y</th><th scope="col">Best</th><th scope="col">SEO</th><th scope="col">LCP</th><th scope="col">CLS</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Home</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="num">0.5 s</td><td class="num">0</td></tr>
+              <tr><td>Projects</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="num">0.5 s</td><td class="num">0</td></tr>
+              <tr><td>Single project</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="num">0.7 s</td><td class="num">0</td></tr>
+              <tr><td>Services</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="num">0.4 s</td><td class="num">0</td></tr>
+              <tr><td>Booking</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="num">0.5 s</td><td class="num">0</td></tr>
+              <tr><td>Contact</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="score">100</td><td class="num">0.4 s</td><td class="num">0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="plates" style="margin-top: clamp(56px, 7vw, 96px)">
+        <figure class="plate">
+          <div class="plate__frame" data-scale>
+            <button type="button" class="zoom" data-full="assets/full/11-lighthouse.jpg" aria-label="Enlarge the Lighthouse report"><img src="assets/11-lighthouse.jpg" alt="Lighthouse report for the home page showing 100 for Performance, Accessibility, Best Practices and SEO, with First Contentful Paint 0.3 s, Largest Contentful Paint 0.5 s, Total Blocking Time 0 ms and Cumulative Layout Shift 0." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+          </div>
+          <figcaption><strong>Lighthouse, home page</strong><span class="mono">report in the repo</span></figcaption>
+        </figure>
+        <figure class="plate">
+          <div class="plate__frame" data-scale>
+            <button type="button" class="zoom" data-full="assets/full/12-mobile.jpg" aria-label="Enlarge the phone-width screenshots"><img src="assets/12-mobile.jpg" alt="Three phone-width screens side by side: the home page, the booking calendar, and the projects grid, each laid out in a single column." width="1000" height="474" loading="lazy"><span class="zoom__hint" aria-hidden="true">Enlarge</span></button>
+          </div>
+          <figcaption><strong>At 390 px</strong><span class="mono">0 px horizontal overflow, seven pages</span></figcaption>
+        </figure>
+      </div>
+
+      <ul class="checks" style="margin-top: clamp(56px, 7vw, 96px)">
+        <li><span>Booking made in a browser, confirmed by the automation with no human step</span><span class="result">1,062 ms</span></li>
+        <li><span>Daylight-saving assertions across the 1 Nov 2026 transition</span><span class="result">6 / 6</span></li>
+        <li><span>Callback with a missing or wrong signature</span><span class="result">403</span></li>
+        <li><span>Callback with a valid signature and an unknown booking</span><span class="result">404</span></li>
+        <li><span>Horizontal overflow at 390 px, seven public pages</span><span class="result">0 px</span></li>
+        <li><span>PHP warnings after exercising every page and both write routes, <code>WP_DEBUG</code> on</span><span class="result">0</span></li>
+        <li><span>Build step required to run the site</span><span class="result">none</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="shell">
+      <div class="cta">
+        <h2>Want to see the lock hold?</h2>
+        <p>I can run the concurrency test live and walk through the plugin, the theme and the workflow on a call. The source is public.</p>
+        <div class="hero__actions">
+          <a class="btn btn--solid" href="mailto:andisyafrianda@gmail.com">andisyafrianda@gmail.com</a>
+          <a class="btn btn--line" href="https://github.com/andipyk/booking-contact-general">Source on GitHub</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="shell footer">
+  <div>
+    <p class="footer__name">Andi Syafrianda</p>
+    <p class="label">WordPress &middot; automation</p>
+  </div>
+  <div class="footer__links">
+    <a href="#brief">Brief</a>
+    <a href="#build">Build</a>
+    <a href="#evidence">Evidence</a>
+    <a href="https://github.com/andipyk/booking-contact-general">GitHub</a>
+  </div>
+  <p class="footer__fine">Eastern Standard Studio is invented. This was self-initiated to demonstrate an approach; it is not client work and was not commissioned.</p>
+</footer>
+
+<dialog class="lightbox" id="lightbox" aria-label="Enlarged view">
+  <div class="lightbox__body" id="lightbox-body"></div>
+  <div class="lightbox__bar">
+    <span id="lightbox-cap"></span>
+    <button type="button" class="lightbox__close" id="lightbox-close" autofocus>Close</button>
+  </div>
+</dialog>
+</body>
+</html>

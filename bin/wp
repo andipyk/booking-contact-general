@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# WP-CLI in a throwaway container with the web server's image, environment
+# and user (www-data), so a command behaves as the same code would on a
+# request.   bin/wp plugin list
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+run=(docker compose --progress quiet run --rm)
+[ -t 0 ] && [ -t 1 ] || run+=(-T)
+exec "${run[@]}" wpcli "$@"

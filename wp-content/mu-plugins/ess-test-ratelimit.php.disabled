@@ -1,0 +1,11 @@
+<?php
+/**
+ * Plugin Name: ESS — raise the rate limit for concurrency testing
+ * Description: Enabled only by bin/concurrency-test.sh, which renames it in and out of place. Never ships enabled.
+ *
+ * @package ESS\Core
+ */
+
+defined( 'ABSPATH' ) || exit;
+
+add_filter( 'ess_rate_limit_max', static fn(): int => 200 );

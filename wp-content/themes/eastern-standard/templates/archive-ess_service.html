@@ -1,0 +1,49 @@
+<!-- wp:template-part {"slug":"header","tagName":"header"} /-->
+
+<!-- wp:group {"tagName":"main","layout":{"type":"constrained"}} -->
+<main class="wp-block-group">
+
+	<!-- wp:group {"style":{"spacing":{"margin":{"top":"var:preset|spacing|50"},"blockGap":"var:preset|spacing|20"}},"layout":{"type":"constrained"}} -->
+	<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--50)">
+		<!-- wp:heading {"level":1,"fontSize":"xx-large"} -->
+		<h1 class="wp-block-heading has-xx-large-font-size">What the studio does</h1>
+		<!-- /wp:heading -->
+		<!-- wp:paragraph {"textColor":"muted","fontSize":"large"} -->
+		<p class="has-muted-color has-text-color has-large-font-size">Five services, and the honest lead time on each. Most projects use two or three of them together.</p>
+		<!-- /wp:paragraph -->
+	</div>
+	<!-- /wp:group -->
+
+	<!-- wp:query {"queryId":2,"query":{"perPage":20,"pages":0,"offset":0,"postType":"ess_service","order":"asc","orderBy":"title","inherit":false},"align":"wide","layout":{"type":"default"},"style":{"spacing":{"margin":{"top":"var:preset|spacing|40"}}}} -->
+	<div class="wp-block-query alignwide" style="margin-top:var(--wp--preset--spacing--40)">
+		<!-- wp:post-template {"layout":{"type":"grid","minimumColumnWidth":"20rem"}} -->
+			<!-- wp:group {"className":"ess-service-card","style":{"spacing":{"blockGap":"var:preset|spacing|20","padding":{"top":"var:preset|spacing|30","bottom":"var:preset|spacing|30","left":"var:preset|spacing|30","right":"var:preset|spacing|30"}},"border":{"color":"var:preset|color|line","width":"1px","radius":"12px"}},"backgroundColor":"surface","layout":{"type":"default"}} -->
+			<div class="wp-block-group ess-service-card has-surface-background-color has-background" style="border-color:var(--wp--preset--color--line);border-width:1px;border-radius:12px;padding-top:var(--wp--preset--spacing--30);padding-bottom:var(--wp--preset--spacing--30);padding-left:var(--wp--preset--spacing--30);padding-right:var(--wp--preset--spacing--30)">
+				<!-- wp:post-title {"isLink":true,"level":2,"fontSize":"large"} /-->
+				<!-- wp:post-excerpt {"excerptLength":26,"textColor":"muted","fontSize":"small"} /-->
+				<!-- wp:group {"style":{"spacing":{"blockGap":"0.2rem","margin":{"top":"var:preset|spacing|20"}}},"layout":{"type":"default"}} -->
+				<div class="wp-block-group" style="margin-top:var(--wp--preset--spacing--20)">
+					<!-- wp:paragraph {"className":"ess-label","textColor":"muted"} -->
+			<p class="ess-label has-muted-color has-text-color">Typical lead time</p>
+			<!-- /wp:paragraph -->
+					<!-- wp:paragraph {"metadata":{"bindings":{"content":{"source":"core/post-meta","args":{"key":"ess_lead_time"}}}},"style":{"typography":{"fontWeight":"600"}},"fontSize":"small"} -->
+					<p class="has-small-font-size" style="font-weight:600">—</p>
+					<!-- /wp:paragraph -->
+				</div>
+				<!-- /wp:group -->
+			</div>
+			<!-- /wp:group -->
+		<!-- /wp:post-template -->
+
+		<!-- wp:query-no-results -->
+			<!-- wp:paragraph --><p>No services published yet.</p><!-- /wp:paragraph -->
+		<!-- /wp:query-no-results -->
+	</div>
+	<!-- /wp:query -->
+
+	<!-- wp:pattern {"slug":"eastern-standard/booking-cta"} /-->
+
+</main>
+<!-- /wp:group -->
+
+<!-- wp:template-part {"slug":"footer","tagName":"footer"} /-->

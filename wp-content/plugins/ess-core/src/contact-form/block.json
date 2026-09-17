@@ -1,0 +1,28 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "ess/contact-form",
+	"title": "Contact Form",
+	"category": "widgets",
+	"icon": "email-alt",
+	"description": "Send a message to the studio. Shares the booking form's nonce and anti-spam layer.",
+	"keywords": [ "contact", "enquiry", "message", "form" ],
+	"textdomain": "ess-core",
+	"supports": {
+		"html": false,
+		"interactivity": true,
+		"align": [ "wide", "full" ],
+		"spacing": { "margin": true, "padding": true }
+	},
+	"attributes": {
+		"heading": { "type": "string", "default": "Tell us about the project" },
+		"intro": {
+			"type": "string",
+			"default": "Drawings, a site address or a rough square footage all help. We reply within one business day."
+		}
+	},
+	"editorScript": "ess-contact-form-editor",
+	"style": "ess-forms",
+	"render": "file:./render.php",
+	"viewScriptModule": "file:./view.js"
+}

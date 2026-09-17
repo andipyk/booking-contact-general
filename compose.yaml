@@ -1,0 +1,204 @@
+# Eastern Standard Studio: local WordPress 7.1 stack (wp-portfolio standard).
+#
+# Everything the demo needs runs here: WordPress, the automation engine (n8n),
+# an SMTP catcher (Mailpit), an object cache (Redis), and a DB browser on
+# demand. n8n is reachable from WordPress at http://n8n:5678 over the internal
+# Docker network, so no public tunnel is involved and no URL changes between
+# restarts.
+#
+# One image, wp-portfolio-wordpress:7.1-php8.4, runs both the web server and
+# WP-CLI, and every wp-portfolio project on this machine shares it.
+#
+#   bin/setup.sh                            first run: builds the image, provisions
+#   docker compose up -d --wait             the stack
+#   bin/wp <command>                        WP-CLI (profile "cli", run on demand)
+#   docker compose --profile tools up -d    adds phpMyAdmin
+#   docker compose stop                     before starting another project
+#
+# There is deliberately no restart policy: a stack runs only while you work on
+# it and does not come back by itself when Docker Desktop starts.
+#
+# Ports come in blocks of ten per project: +0 WordPress, +1 phpMyAdmin,
+# +2 Mailpit, +3 n8n. This project owns 8100.
+
+# Built from ./docker/wordpress by bin/setup.sh with a plain `docker build`,
+# not by Compose: Compose stamps the project name into the image labels, so
+# identical files would get a different image ID in every project. Run
+# bin/setup.sh before the first `docker compose up`.
+x-wordpress-image: &wordpress-image
+  image: wp-portfolio-wordpress:7.1-php8.4
+  pull_policy: never
+
+# Referenced by both PHP services so they cannot drift. wp-config.php eval()s
+# WORDPRESS_CONFIG_EXTRA at runtime, so a CLI without this block runs with no
+# object cache and no debug constants, which is how `wp redis enable` once
+# ended up dialling 127.0.0.1.
+x-wordpress-env: &wordpress-env
+  WORDPRESS_DB_HOST: db
+  WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+  WORDPRESS_DB_USER: ${MYSQL_USER}
+  WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+  # The image defines WP_DEBUG from this variable *before* it eval()s
+  # WORDPRESS_CONFIG_EXTRA, so a define() in that block is a silent no-op and
+  # debug logging never switches on. This is the only switch that works.
+  WORDPRESS_DEBUG: "1"
+  WORDPRESS_CONFIG_EXTRA: |
+    defined('WP_DEBUG_LOG')        || define('WP_DEBUG_LOG', true);
+    defined('WP_DEBUG_DISPLAY')    || define('WP_DEBUG_DISPLAY', false);
+    defined('SCRIPT_DEBUG')        || define('SCRIPT_DEBUG', true);
+    defined('DISALLOW_FILE_EDIT')  || define('DISALLOW_FILE_EDIT', true);
+    defined('WP_ENVIRONMENT_TYPE') || define('WP_ENVIRONMENT_TYPE', 'local');
+    defined('WP_REDIS_HOST')       || define('WP_REDIS_HOST', 'redis');
+    defined('WP_REDIS_PORT')       || define('WP_REDIS_PORT', 6379);
+    defined('WP_REDIS_PREFIX')     || define('WP_REDIS_PREFIX', 'ess');
+  # Read by wp-content/plugins/ess-core and mu-plugins/ess-env.php via getenv().
+  ESS_WEBHOOK_URL: ${ESS_WEBHOOK_URL}
+  ESS_WEBHOOK_SECRET: ${ESS_WEBHOOK_SECRET}
+  ESS_STUDIO_TIMEZONE: ${ESS_STUDIO_TIMEZONE}
+  ESS_STUDIO_EMAIL: ${ESS_STUDIO_EMAIL}
+  ESS_SMTP_HOST: mailpit
+  ESS_SMTP_PORT: "1025"
+  # rest_url() returns the browser-facing URL. The automation calls back from
+  # inside the Docker network, where localhost:8100 is n8n's own port, so the
+  # payload has to advertise the service name instead.
+  ESS_CALLBACK_URL: http://wordpress/wp-json/ess/v1/booking/status
+
+services:
+  db:
+    image: mariadb:11.8
+    environment:
+      MARIADB_DATABASE: ${MYSQL_DATABASE}
+      MARIADB_USER: ${MYSQL_USER}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD}
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+      start_interval: 2s
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru", "--save", ""]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+      start_interval: 1s
+
+  wordpress:
+    <<: *wordpress-image
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "${WP_PORT:-8100}:80"
+    environment: *wordpress-env
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+      - ./wp-content/plugins/ess-core:/var/www/html/wp-content/plugins/ess-core
+      - ./wp-content/themes/eastern-standard:/var/www/html/wp-content/themes/eastern-standard
+    # Healthy once the entrypoint has copied core and written wp-config.php,
+    # which is what WP-CLI needs before its first command.
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /var/www/html/wp-config.php && test -f /var/www/html/wp-includes/version.php"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 60s
+      start_interval: 1s
+
+  wpcli:
+    <<: *wordpress-image
+    profiles: ["cli"]
+    # Same image as the web server, so www-data is already UID 33 and the
+    # files it writes on the shared volume stay owned by the web server.
+    user: www-data
+    entrypoint: ["wp"]
+    working_dir: /var/www/html
+    depends_on:
+      wordpress:
+        condition: service_healthy
+    environment: *wordpress-env
+    # The wordpress service's mounts, plus bin/ read-only for `wp eval-file`.
+    # bin/ is mounted here only, so seed scripts are never web-reachable.
+    volumes:
+      - wp_data:/var/www/html
+      - ./wp-content/mu-plugins:/var/www/html/wp-content/mu-plugins
+      - ./wp-content/plugins/ess-core:/var/www/html/wp-content/plugins/ess-core
+      - ./wp-content/themes/eastern-standard:/var/www/html/wp-content/themes/eastern-standard
+      - ./bin:/var/www/html/bin:ro
+
+  mailpit:
+    image: axllent/mailpit:v1.31.1
+    ports:
+      - "${MAILPIT_PORT:-8102}:8025"
+    environment:
+      MP_MAX_MESSAGES: "500"
+      MP_SMTP_AUTH_ACCEPT_ANY: "1"
+      MP_SMTP_AUTH_ALLOW_INSECURE: "1"
+
+  n8n:
+    image: n8nio/n8n:2.40.0
+    depends_on:
+      mailpit:
+        condition: service_started
+    ports:
+      - "${N8N_PORT:-8103}:5678"
+    environment:
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+      N8N_WEBHOOK_URL: http://localhost:${N8N_PORT:-8103}/
+      GENERIC_TIMEZONE: ${ESS_STUDIO_TIMEZONE}
+      TZ: ${ESS_STUDIO_TIMEZONE}
+      # Pinned so exported credentials stay decryptable across a rebuild —
+      # that is what makes n8n/credentials/*.json importable on a fresh clone.
+      N8N_ENCRYPTION_KEY: ${N8N_ENCRYPTION_KEY}
+      N8N_SECURE_COOKIE: "false"
+      N8N_RUNNERS_ENABLED: "true"
+      # n8n blocks $env inside node expressions by default. The callback node
+      # reads the shared secret that way, so that block has to be lifted or the
+      # workflow fails with "access to env vars denied" after the emails have
+      # already gone out — a confusing half-success.
+      N8N_BLOCK_ENV_ACCESS_IN_NODE: "false"
+      N8N_DIAGNOSTICS_ENABLED: "false"
+      N8N_VERSION_NOTIFICATIONS_ENABLED: "false"
+      N8N_PERSONALIZATION_ENABLED: "false"
+      ESS_CALLBACK_URL: http://wordpress/wp-json/ess/v1/booking/status
+      ESS_WEBHOOK_SECRET: ${ESS_WEBHOOK_SECRET}
+      ESS_STUDIO_EMAIL: ${ESS_STUDIO_EMAIL}
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./n8n:/import:ro
+
+  phpmyadmin:
+    image: phpmyadmin:5.2
+    profiles: ["tools"]
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PMA_PORT:-8101}:80"
+    environment:
+      PMA_HOST: db
+      PMA_USER: ${MYSQL_USER}
+      PMA_PASSWORD: ${MYSQL_PASSWORD}
+      UPLOAD_LIMIT: 64M
+
+volumes:
+  db_data:
+  wp_data:
+  redis_data:
+  n8n_data:

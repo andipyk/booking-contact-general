@@ -1,0 +1,21 @@
+/*
+Theme Name: Eastern Standard
+Theme URI: https://example.com/eastern-standard
+Author: Andi Syafrianda
+Author URI: https://github.com/andipyk
+Description: A block theme for an architecture and MEP engineering studio. Presentation only — projects, services, booking and enquiries are provided by the Eastern Standard Core plugin, so switching themes never takes studio data with it.
+Requires at least: 6.9
+Tested up to: 7.1
+Requires PHP: 8.1
+Version: 1.0.0
+License: GNU General Public License v2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: eastern-standard
+Tags: full-site-editing, block-patterns, custom-colors, custom-logo, portfolio, business
+*/
+
+/*
+ * theme.json carries the design system. This file holds only what theme.json
+ * has no vocabulary for: the project grid, the sticky header behaviour and the
+ * spec-sheet table on a project page.
+ */

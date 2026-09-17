@@ -1,0 +1,46 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "ess/booking-form",
+	"title": "Consultation Booking",
+	"category": "widgets",
+	"icon": "calendar-alt",
+	"description": "Pick a consultation slot and book it. Slots are generated server-side in the studio timezone.",
+	"keywords": [
+		"booking",
+		"appointment",
+		"consultation",
+		"calendar"
+	],
+	"textdomain": "ess-core",
+	"supports": {
+		"html": false,
+		"interactivity": true,
+		"align": [
+			"wide",
+			"full"
+		],
+		"spacing": {
+			"margin": true,
+			"padding": true
+		}
+	},
+	"attributes": {
+		"heading": {
+			"type": "string",
+			"default": "Book a consultation"
+		},
+		"intro": {
+			"type": "string",
+			"default": "Forty-five minutes with a principal to walk through scope, constraints and a realistic programme."
+		},
+		"days": {
+			"type": "number",
+			"default": 14
+		}
+	},
+	"editorScript": "ess-booking-form-editor",
+	"style": "ess-forms",
+	"render": "file:./render.php",
+	"viewScriptModule": "file:./view.js"
+}
